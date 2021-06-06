@@ -29,9 +29,39 @@
 
             #include "UnityCG.cginc"
 
-            float DistanceFunc(float3 pos)
+            float3 hsv2rgb(float3 c) {
+                c = float3(c.x, clamp(c.yz, 0.0, 1.0));
+                float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+                float3 p = abs(frac(c.xxx + K.xyz) * 6.0 - K.www);
+                return c.z * lerp(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+            }
+
+            float smin(float a, float b) {
+                float k = 0.24;
+                float h = clamp(0.5 + 0.5*(a-b)/k, 0.0, 1.0);
+                return lerp(a, b, h) - k*h*(1.0-h);
+            }
+
+            float DistanceFunc(float3 pos, float y)
             {
-                return length(pos) - 1.0;
+                float3 center = float3(floor(pos.x) + 0.5, y, floor(pos.z) + 0.5);
+                float r = 0.5;
+                float d1 = length(pos - (center + float3(-1.0, 0.0, -1.0))) - r;
+                float d2 = length(pos - (center + float3(0.0, 0.0, -1.0))) - r;
+                float d3 = length(pos - (center + float3(1.0, 0.0, -1.0))) - r;
+                float d4 = length(pos - (center + float3(-1.0, 0.0, 0.0))) - r;
+                float d5 = length(pos - (center + float3(0.0, 0.0, 0.0))) - r;
+                float d6 = length(pos - (center + float3(1.0, 0.0, 0.0))) - r;
+                float d7 = length(pos - (center + float3(-1.0, 0.0, 1.0))) - r;
+                float d8 = length(pos - (center + float3(0.0, 0.0, 1.0))) - r;
+                float d9 = length(pos - (center + float3(1.0, 0.0, 1.0))) - r;
+
+                //return min(d1, min(d2, min(d3, min(d4, min(d5, min(d6, min(d7, min(d8, d9))))))));
+                return smin(d1, smin(d2, smin(d3, smin(d4, smin(d5, smin(d6, smin(d7, smin(d8, d9))))))));
+            }
+
+            float DistanceFunc(float3 pos) {
+                return min(min(DistanceFunc(pos, 7.0), DistanceFunc(pos, 0.0)), DistanceFunc(pos, 3.5));
             }
 
             float3 GetNormal(float3 pos)
