@@ -13,6 +13,8 @@
 
         Pass
         {
+            Cull Off
+
             CGPROGRAM
 
             #define CAMERA_POSITION     _WorldSpaceCameraPos
@@ -44,7 +46,9 @@
 
             float DistanceFunc(float3 pos, float y)
             {
-                float3 center = float3(floor(pos.x) + 0.5, y, floor(pos.z) + 0.5);
+                float offset = 0.5;
+                //float offset = (sin(_Time.y) + 1.0) * 0.25;
+                float3 center = float3(floor(pos.x) + offset, y, floor(pos.z) + offset);
                 float r = 0.5;
                 float d1 = length(pos - (center + float3(-1.0, 0.0, -1.0))) - r;
                 float d2 = length(pos - (center + float3(0.0, 0.0, -1.0))) - r;
@@ -61,7 +65,7 @@
             }
 
             float DistanceFunc(float3 pos) {
-                return min(min(DistanceFunc(pos, 7.0), DistanceFunc(pos, 0.0)), DistanceFunc(pos, 3.5));
+                return min(DistanceFunc(pos, 7.0), DistanceFunc(pos, 0.0));
             }
 
             float3 GetNormal(float3 pos)
