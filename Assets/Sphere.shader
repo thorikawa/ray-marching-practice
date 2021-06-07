@@ -59,7 +59,7 @@
             }
 
             float smin(float a, float b) {
-                float k = 0.24;
+                float k = 0.24 * _Diameter;
                 float h = clamp(0.5 + 0.5*(a-b)/k, 0.0, 1.0);
                 return lerp(a, b, h) - k*h*(1.0-h);
             }
@@ -67,21 +67,30 @@
             float DistanceFunc(float3 pos, float y)
             {
                 float diameter = _Diameter;
-                float r = (sin(_Time.z) + 1.0) * 0.25 + 0.25;
+                float r = diameter * 0.5;
                 //float offset = (sin(_Time.y) + 1.0) * 0.25;
-                float3 center = float3(floor(pos.x / diameter) + diameter * 0.5, y, floor(pos.z / diameter) + diameter * 0.5);
-                float d1 = length(pos - (center + float3(-diameter, 0.0, -diameter))) - r;
-                float d2 = length(pos - (center + float3(0.0, 0.0, -diameter))) - r;
-                float d3 = length(pos - (center + float3(diameter, 0.0, -diameter))) - r;
-                float d4 = length(pos - (center + float3(-diameter, 0.0, 0.0))) - r;
-                float d5 = length(pos - (center + float3(0.0, 0.0, 0.0))) - r;
-                float d6 = length(pos - (center + float3(diameter, 0.0, 0.0))) - r;
-                float d7 = length(pos - (center + float3(-diameter, 0.0, diameter))) - r;
-                float d8 = length(pos - (center + float3(0.0, 0.0, diameter))) - r;
-                float d9 = length(pos - (center + float3(diameter, 0.0, diameter))) - r;
+                float3 center = float3(floor(pos.x / diameter) * diameter + diameter * 0.5, y, floor(pos.z / diameter) * diameter + diameter * 0.5);
+                float ya = sin(_Time.z + center.x - diameter) * 0.5;
+                float yb = sin(_Time.z + center.x) * 0.5;
+                float yc = sin(_Time.z + center.x + diameter) * 0.5;
+                // float ya = 0.0;
+                // float yb = 0.0;
+                // float yc = 0.0;
 
-                //return min(d1, min(d2, min(d3, min(d4, min(d5, min(d6, min(d7, min(d8, d9))))))));
-                return smin(d1, smin(d2, smin(d3, smin(d4, smin(d5, smin(d6, smin(d7, smin(d8, d9))))))));
+                float d1 = length(pos - (center + float3(-diameter, ya, -diameter))) - r;
+                float d2 = length(pos - (center + float3(0.0, yb, -diameter))) - r;
+                float d3 = length(pos - (center + float3(diameter, yc, -diameter))) - r;
+                float d4 = length(pos - (center + float3(-diameter, ya, 0.0))) - r;
+                float d5 = length(pos - (center + float3(0.0, yb, 0.0))) - r;
+                float d6 = length(pos - (center + float3(diameter, yc, 0.0))) - r;
+                float d7 = length(pos - (center + float3(-diameter, ya, diameter))) - r;
+                float d8 = length(pos - (center + float3(0.0, yb, diameter))) - r;
+                float d9 = length(pos - (center + float3(diameter, yc, diameter))) - r;
+
+                float d = min(d1, min(d2, min(d3, min(d4, min(d5, min(d6, min(d7, min(d8, d9))))))));
+                //d = d * exp(-_Time.y);
+                return d;
+                //return smin(d1, smin(d2, smin(d3, smin(d4, smin(d5, smin(d6, smin(d7, smin(d8, d9))))))));
             }
 
             float DistanceFunc(float3 pos) {
@@ -140,14 +149,18 @@
 
                 fixed4 col;
                 
-                float fx = frac(pos.x / 10.0) * 10.0;
-                float fz = frac(pos.z / 10.0) * 10.0;
+                float d = _Diameter;
+                float fx = frac(pos.x * 0.1 / d) * 10.0;
+                float fz = frac(pos.z * 0.1 / d) * 10.0;
 
-                float3 hsvCol = float3(fx * 0.1 + fz * 0.1, 1.0, 1.0);
+                //float3 hsvCol = float3(fx * 0.1 + fz * 0.1, 1.0, 1.0);
+                //float3 hsvCol = float3(1.0, 1.0, 1.0);
                 //col.rgb = max(dot(normal, lightDir), 0.0) * _Color.rgb;
-                col.rgb = max(dot(normal, lightDir), 0.0) * hsv2rgb(hsvCol);
+                //col.rgb = max(dot(normal, lightDir), 0.0) * hsv2rgb(hsvCol);
                 //col.rgb = max(dot(normal, lightDir), 0.0) * float3(h * 0.1, 0.0, 0.0);
                 //col.rgb = float3(h * 0.1, 0.0, 0.0);
+                float light = max(dot(normal, lightDir), 0.0);
+                col.rgb = (2 * light * light + 0.25) * float3(156.0 / 255.0, 222.0 / 255.0, 246.0 / 255.0);
                 col.a = _Color.a;
                 return col;
             }
