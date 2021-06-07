@@ -5,6 +5,7 @@
         _MainTex ("Texture", 2D) = "white" {}
         _Loop ("Loop", Range(1, 100)) = 30
         _Color ("Color", Color) = (0.5, 0.5, 0.5, 1.0)
+        _Diameter ("Diameter", Float) = 1.0
     }
     SubShader
     {
@@ -31,52 +32,6 @@
 
             #include "UnityCG.cginc"
 
-            float3 hsv2rgb(float3 c) {
-                c = float3(c.x, clamp(c.yz, 0.0, 1.0));
-                float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-                float3 p = abs(frac(c.xxx + K.xyz) * 6.0 - K.www);
-                return c.z * lerp(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-            }
-
-            float smin(float a, float b) {
-                float k = 0.24;
-                float h = clamp(0.5 + 0.5*(a-b)/k, 0.0, 1.0);
-                return lerp(a, b, h) - k*h*(1.0-h);
-            }
-
-            float DistanceFunc(float3 pos, float y)
-            {
-                float offset = 0.5;
-                //float offset = (sin(_Time.y) + 1.0) * 0.25;
-                float3 center = float3(floor(pos.x) + offset, y, floor(pos.z) + offset);
-                float r = 0.5;
-                float d1 = length(pos - (center + float3(-1.0, 0.0, -1.0))) - r;
-                float d2 = length(pos - (center + float3(0.0, 0.0, -1.0))) - r;
-                float d3 = length(pos - (center + float3(1.0, 0.0, -1.0))) - r;
-                float d4 = length(pos - (center + float3(-1.0, 0.0, 0.0))) - r;
-                float d5 = length(pos - (center + float3(0.0, 0.0, 0.0))) - r;
-                float d6 = length(pos - (center + float3(1.0, 0.0, 0.0))) - r;
-                float d7 = length(pos - (center + float3(-1.0, 0.0, 1.0))) - r;
-                float d8 = length(pos - (center + float3(0.0, 0.0, 1.0))) - r;
-                float d9 = length(pos - (center + float3(1.0, 0.0, 1.0))) - r;
-
-                //return min(d1, min(d2, min(d3, min(d4, min(d5, min(d6, min(d7, min(d8, d9))))))));
-                return smin(d1, smin(d2, smin(d3, smin(d4, smin(d5, smin(d6, smin(d7, smin(d8, d9))))))));
-            }
-
-            float DistanceFunc(float3 pos) {
-                return min(DistanceFunc(pos, 7.0), DistanceFunc(pos, 0.0));
-            }
-
-            float3 GetNormal(float3 pos)
-            {
-                const float d = 0.001;
-                return 0.5 + 0.5 * normalize(float3(
-                    DistanceFunc(pos + float3(  d, 0.0, 0.0)) - DistanceFunc(pos + float3( -d, 0.0, 0.0)),
-                    DistanceFunc(pos + float3(0.0,   d, 0.0)) - DistanceFunc(pos + float3(0.0,  -d, 0.0)),
-                    DistanceFunc(pos + float3(0.0, 0.0,   d)) - DistanceFunc(pos + float3(0.0, 0.0,  -d))));
-            }
-
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -94,6 +49,53 @@
             float4 _MainTex_ST;
             fixed4 _Color;
             int _Loop;
+            float _Diameter;
+
+            float3 hsv2rgb(float3 c) {
+                c = float3(c.x, clamp(c.yz, 0.0, 1.0));
+                float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+                float3 p = abs(frac(c.xxx + K.xyz) * 6.0 - K.www);
+                return c.z * lerp(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+            }
+
+            float smin(float a, float b) {
+                float k = 0.24;
+                float h = clamp(0.5 + 0.5*(a-b)/k, 0.0, 1.0);
+                return lerp(a, b, h) - k*h*(1.0-h);
+            }
+
+            float DistanceFunc(float3 pos, float y)
+            {
+                float diameter = _Diameter;
+                float r = (sin(_Time.z) + 1.0) * 0.25 + 0.25;
+                //float offset = (sin(_Time.y) + 1.0) * 0.25;
+                float3 center = float3(floor(pos.x / diameter) + diameter * 0.5, y, floor(pos.z / diameter) + diameter * 0.5);
+                float d1 = length(pos - (center + float3(-diameter, 0.0, -diameter))) - r;
+                float d2 = length(pos - (center + float3(0.0, 0.0, -diameter))) - r;
+                float d3 = length(pos - (center + float3(diameter, 0.0, -diameter))) - r;
+                float d4 = length(pos - (center + float3(-diameter, 0.0, 0.0))) - r;
+                float d5 = length(pos - (center + float3(0.0, 0.0, 0.0))) - r;
+                float d6 = length(pos - (center + float3(diameter, 0.0, 0.0))) - r;
+                float d7 = length(pos - (center + float3(-diameter, 0.0, diameter))) - r;
+                float d8 = length(pos - (center + float3(0.0, 0.0, diameter))) - r;
+                float d9 = length(pos - (center + float3(diameter, 0.0, diameter))) - r;
+
+                //return min(d1, min(d2, min(d3, min(d4, min(d5, min(d6, min(d7, min(d8, d9))))))));
+                return smin(d1, smin(d2, smin(d3, smin(d4, smin(d5, smin(d6, smin(d7, smin(d8, d9))))))));
+            }
+
+            float DistanceFunc(float3 pos) {
+                return min(DistanceFunc(pos, 7.0), DistanceFunc(pos, 0.0));
+            }
+
+            float3 GetNormal(float3 pos)
+            {
+                const float d = 0.001;
+                return 0.5 + 0.5 * normalize(float3(
+                    DistanceFunc(pos + float3(  d, 0.0, 0.0)) - DistanceFunc(pos + float3( -d, 0.0, 0.0)),
+                    DistanceFunc(pos + float3(0.0,   d, 0.0)) - DistanceFunc(pos + float3(0.0,  -d, 0.0)),
+                    DistanceFunc(pos + float3(0.0, 0.0,   d)) - DistanceFunc(pos + float3(0.0, 0.0,  -d))));
+            }
 
             v2f vert (appdata v)
             {
@@ -137,7 +139,15 @@
                 float3 lightDir = _WorldSpaceLightPos0.xyz;
 
                 fixed4 col;
-                col.rgb = max(dot(normal, lightDir), 0.0) * _Color.rgb;
+                
+                float fx = frac(pos.x / 10.0) * 10.0;
+                float fz = frac(pos.z / 10.0) * 10.0;
+
+                float3 hsvCol = float3(fx * 0.1 + fz * 0.1, 1.0, 1.0);
+                //col.rgb = max(dot(normal, lightDir), 0.0) * _Color.rgb;
+                col.rgb = max(dot(normal, lightDir), 0.0) * hsv2rgb(hsvCol);
+                //col.rgb = max(dot(normal, lightDir), 0.0) * float3(h * 0.1, 0.0, 0.0);
+                //col.rgb = float3(h * 0.1, 0.0, 0.0);
                 col.a = _Color.a;
                 return col;
             }
