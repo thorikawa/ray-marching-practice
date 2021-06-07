@@ -67,7 +67,7 @@
             float DistanceFunc(float3 pos, float y)
             {
                 float diameter = _Diameter;
-                float r = diameter * 0.5;
+                float r = diameter * 0.4;
                 //float offset = (sin(_Time.y) + 1.0) * 0.25;
                 float3 center = float3(floor(pos.x / diameter) * diameter + diameter * 0.5, y, floor(pos.z / diameter) * diameter + diameter * 0.5);
                 float ya = sin(_Time.z + center.x - diameter) * 0.5;
@@ -88,13 +88,13 @@
                 float d9 = length(pos - (center + float3(diameter, yc, diameter))) - r;
 
                 float d = min(d1, min(d2, min(d3, min(d4, min(d5, min(d6, min(d7, min(d8, d9))))))));
-                //d = d * exp(-_Time.y);
+                //d = d * atan(_Time.x);
                 return d;
                 //return smin(d1, smin(d2, smin(d3, smin(d4, smin(d5, smin(d6, smin(d7, smin(d8, d9))))))));
             }
 
             float DistanceFunc(float3 pos) {
-                return min(DistanceFunc(pos, 7.0), DistanceFunc(pos, 0.0));
+                return min(DistanceFunc(pos, 6.5), DistanceFunc(pos, 0.0));
             }
 
             float3 GetNormal(float3 pos)
