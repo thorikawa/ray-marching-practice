@@ -69,8 +69,8 @@ Material:
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _R1: 4
-    - _R2: 0.76
+    - _R1: 5
+    - _R2: 1.2
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1

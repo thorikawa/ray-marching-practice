@@ -69,7 +69,9 @@
             float DistanceFunc(float3 pos, float y)
             {
                 float2 dir1 = _R1 * normalize(float2(pos.x, pos.z));
-                return length(pos - float3(dir1.x, y, dir1.y)) - _R2;
+                float d = length(pos - float3(dir1.x, y, dir1.y)) - _R2;
+                float d2 = 0.2 * sin(5 * pos.x + _Time.x) * sin(5 * pos.y + _Time.y) * sin(5 * pos.z + _Time.z);
+                return d + d2;
             }
 
             float DistanceFunc(float3 pos) {
@@ -126,8 +128,11 @@
                 float3 normal = GetNormal(pos);
                 float3 lightDir = _WorldSpaceLightPos0.xyz;
 
-                fixed4 col;                
-                col.rgb = max(dot(normal, lightDir), 0.0) * _Color.rgb;
+                fixed4 col;
+                float theta = atan2(pos.z, pos.x) + _Time.z;
+                //float fx = frac(pos.x * 0.1 / 1.0) * 10.0;
+                float3 hsvCol = float3(theta / (2 * 3.141592), 0.9, 1.0);
+                col.rgb = max(dot(normal, lightDir), 0.0) * hsv2rgb(hsvCol) * 1.2;
                 col.a = _Color.a;
                 return col;
             }
