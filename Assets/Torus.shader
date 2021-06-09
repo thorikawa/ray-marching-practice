@@ -28,8 +28,6 @@
 
             #pragma vertex vert
             #pragma fragment frag
-            // make fog work
-            #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
 
@@ -66,16 +64,23 @@
                 return lerp(a, b, h) - k*h*(1.0-h);
             }
 
-            float DistanceFunc(float3 pos, float y)
+            float DistanceFunc(float3 pos, float y, float3 origPos)
             {
                 float2 dir1 = _R1 * normalize(float2(pos.x, pos.z));
                 float d = length(pos - float3(dir1.x, y, dir1.y)) - _R2;
-                float d2 = 0.2 * sin(5 * pos.x + _Time.x) * sin(5 * pos.y + _Time.y) * sin(5 * pos.z + _Time.z);
+                float d2 = 0.05 * sin(5 * origPos.x + _Time.x) * sin(5 * origPos.y + _Time.y) * sin(5 * origPos.z + _Time.z);
                 return d + d2;
             }
 
+            float opRep(float3 p, float3 c)
+            {
+                float3 q = abs(fmod(p + 0.5 * c, c)) - 0.5 * c;
+                return DistanceFunc(q, 0.0, p);
+            }
+
             float DistanceFunc(float3 pos) {
-                return DistanceFunc(pos, 0.0);
+                //return DistanceFunc(pos, 0.0);
+                return opRep(pos, float3(_R1 * 4.1, _R1 * 4.1, _R1 * 4.1));
             }
 
             float3 GetNormal(float3 pos)
@@ -129,10 +134,13 @@
                 float3 lightDir = _WorldSpaceLightPos0.xyz;
 
                 fixed4 col;
-                float theta = atan2(pos.z, pos.x) + _Time.z;
+                float3 c = float3(_R1 * 4.1, _R1 * 4.1, _R1 * 4.1);
+                float3 q = abs(fmod(pos + 0.5 * c, c)) - 0.5 * c;
+                float theta = atan2(q.z, q.x) + _Time.z;
                 //float fx = frac(pos.x * 0.1 / 1.0) * 10.0;
                 float3 hsvCol = float3(theta / (2 * 3.141592), 0.9, 1.0);
                 col.rgb = max(dot(normal, lightDir), 0.0) * hsv2rgb(hsvCol) * 1.2;
+                //col.rgb = max(dot(normal, lightDir), 0.0) * _Color.rgb;
                 col.a = _Color.a;
                 return col;
             }
