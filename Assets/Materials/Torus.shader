@@ -92,6 +92,22 @@
                     DistanceFunc(pos + float3(0.0, 0.0,   d)) - DistanceFunc(pos + float3(0.0, 0.0,  -d))));
             }
 
+            inline float ConvertDistanceToDepth(float d)
+            {
+                // Account for scale
+                float _UnityCameraForwardScale = 1.0;
+                d = _UnityCameraForwardScale > 0.0 ? _UnityCameraForwardScale * d : d;
+
+                // Clip any distances smaller than the near clip plane, and compute the depth value from the distance.
+                return (d < _ProjectionParams.y) ? 0.0f : ((1.0f / _ZBufferParams.z) * ((1.0f / d) - _ZBufferParams.w));
+            }
+
+            inline float GetCameraDepth(float3 pos)
+            {
+                float4 vpPos = mul(UNITY_MATRIX_VP, float4(pos, 1.0));
+                return ConvertDistanceToDepth(vpPos.z / vpPos.w);
+            }
+
             v2f vert (appdata v)
             {
                 v2f o;
@@ -101,7 +117,7 @@
                 return o;
             }
 
-            fixed4 frag (v2f i) : SV_Target
+            void frag (v2f i, out float4 color : SV_Target, out float depth : SV_Depth)
             {
                 float2 screenPos = 2 * (i.projPos.xy / i.projPos.w - 0.5);
                 screenPos.x *= _ScreenParams.x / _ScreenParams.y;
@@ -131,18 +147,22 @@
                 if (dist > 0.01) discard;
 
                 float3 normal = GetNormal(pos);
+#ifdef true
                 float3 lightDir = _WorldSpaceLightPos0.xyz;
+#else
+                float3 lightDir = float3(0.5, -1, 0.5);
+#endif
 
-                fixed4 col;
                 float3 c = float3(_R1 * 4.1, _R1 * 4.1, _R1 * 4.1);
                 float3 q = abs(fmod(pos + 0.5 * c, c)) - 0.5 * c;
                 float theta = atan2(q.z, q.x) + _Time.z;
                 //float fx = frac(pos.x * 0.1 / 1.0) * 10.0;
                 float3 hsvCol = float3(theta / (2 * 3.141592), 0.9, 1.0);
-                col.rgb = max(dot(normal, lightDir), 0.0) * hsv2rgb(hsvCol) * 1.2;
+                color.rgb = max(dot(normal, lightDir), 0.0) * hsv2rgb(hsvCol) * 1.2;
                 //col.rgb = max(dot(normal, lightDir), 0.0) * _Color.rgb;
-                col.a = _Color.a;
-                return col;
+                color.a = _Color.a;
+
+                depth = GetCameraDepth(pos);
             }
             ENDCG
         }
