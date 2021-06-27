@@ -724,7 +724,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   material: {fileID: 2100000, guid: cebdda97a4c5e4aa49dd793611332ca6, type: 2}
-  fps: 1
+  fps: 2
 --- !u!1 &1483138127
 GameObject:
   m_ObjectHideFlags: 0

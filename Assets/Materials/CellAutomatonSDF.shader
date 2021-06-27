@@ -83,9 +83,11 @@
                 float4 sdfVal = lerp(sdfVal1, sdfVal2, tPos);
                 //float alpha = min(sdfVal.a * 2.0, 1.0);
                 float hDist = (0.5 - sdfVal.a) * 2.0 * maxDist;
+                //hDist = max(hDist, 0.0);
                 //float hDist = (1.0 - alpha) * maxDist;
                 //return hDist;
-                return sqrt(hDist * hDist + pos.y * pos.y) - 0.1;
+                float d2 = 0.05 * sin(5 * pos.x + _Time.x) * sin(5 * pos.y + _Time.y) * sin(5 * pos.z + _Time.z);
+                return sqrt(hDist * hDist + pos.y * pos.y) - 0.1 + d2;
                 //return sqrt(hDist * hDist + pos.y * pos.y);
             }
 
@@ -156,7 +158,7 @@
 
                 float light = max(dot(normal, lightDir), 0.0);
                 col.rgb = (2 * light * light + 0.25) * float3(156.0 / 255.0, 222.0 / 255.0, 246.0 / 255.0);
-                //col.rgb = (2 * light * light + 0.25) * sdfVal.xyz;
+                //col.rgb = (2 * light * light + 0.25) * sdfVal.xyz * float3(156.0 / 255.0, 222.0 / 255.0, 246.0 / 255.0);
                 //col.rgb = (2 * light * light * light + 0.25) * sdfVal.xyz;
                 //col.rgb = light * sdfVal.xyz;
                 col.a = _Color.a;

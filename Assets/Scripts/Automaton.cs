@@ -12,6 +12,7 @@ public class Automaton : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Application.targetFrameRate = 60;
         material.SetFloat("_Interval", 1.0f / fps);
         StartCoroutine(FpsLoop());
     }
